@@ -1,0 +1,87 @@
+ext {
+    compileSdkVersion = 26
+    buildToolsVersion = "26.0.2"
+    date = new Date().format("yyMMdd")
+    currDir = new File(System.getProperty("user.dir"))
+    tagHash = "git rev-list --tags --max-count=1".execute(null,currDir).text.trim()
+    tagName = "git describe --tags $tagHash".execute(null,currDir).text.trim()
+    (topicName,topicTag) = tagName.tokenize("_")
+    (versionMajor,versionMinor,versionPatch,versionBuild) = topicTag.tokenize(".")
+    versionThisBuild=Integer.parseInt(versionBuild) + 1
+    versionCodeShifter = 1600000000
+    versionCode = (Integer.parseInt(versionMajor) * 10000000) + (Integer.parseInt(versionMinor) * 100000) + (Integer.parseInt(versionPatch) * 1000) + (versionThisBuild  * 7) + versionCodeShifter
+    versionName = versionMajor + "." + versionMinor + "." + versionPatch + "." + (versionThisBuild) + "_" + date
+    apkName = topicName + "_" + versionName
+}
+
+subprojects {
+
+subproject -> afterEvaluate{
+        if((subproject.plugins.hasPlugin('android'))) {
+            android {
+                //dex
+                dexOptions {
+                    javaMaxHeapSize "2048M"
+                }
+                //sign
+                signingConfigs {
+                    debug {
+                        storeFile file('debug_key/debug.keystore')
+                        storePassword 'Asus#1234'
+                        keyAlias 'androiddebugkey'
+                        keyPassword 'Asus#1234'
+                    }
+                    release {
+                        storeFile file('debug_key/debug.keystore')
+                        storePassword 'Asus#1234'
+                        keyAlias 'androiddebugkey'
+                        keyPassword 'Asus#1234'
+                    }
+                 }
+                //proguard
+                buildTypes {
+                    debug {
+                        minifyEnabled false
+                        signingConfig signingConfigs.debug
+                    }
+                    release {
+                        minifyEnabled false
+                        signingConfig signingConfigs.release
+                    }
+                }
+                //buildTool
+                compileSdkVersion rootProject.ext.compileSdkVersion
+                buildToolsVersion rootProject.ext.buildToolsVersion
+                //lint
+                lintOptions {
+                    abortOnError false
+                    xmlReport false
+                }
+                //version and apk name
+                defaultConfig {
+                    versionCode rootProject.ext.versionCode
+                    versionName rootProject.ext.versionName
+                    setProperty("archivesBaseName",rootProject.ext.apkName)
+                }
+            }
+        }
+    }
+}
+
+task createReleaseApkNameFile() {
+      doLast{
+        println("###############################")
+        println("apk file name = "+ rootProject.ext.apkName+"-release.apk")
+        println("###############################")
+        new File("$projectDir/apkName.txt").text = rootProject.ext.apkName+"-release.apk"
+      }
+}
+
+task createDebugApkNameFile() {
+      doLast{
+        println("###############################")
+        println("apk file name = "+ rootProject.ext.apkName+"-debug.apk")
+        println("###############################")
+        new File("$projectDir/apkName.txt").text = rootProject.ext.apkName+"-debug.apk"
+      }
+}
