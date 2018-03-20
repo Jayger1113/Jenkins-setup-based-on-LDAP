@@ -1,1 +1,1 @@
-# Jenkins-setup-based-on-LDAP
+# Jenkins + LDAP + android gradle build and shell script
